@@ -1,0 +1,219 @@
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+//	"image/color/palette"
+	"image/png"
+	"math/cmplx"
+	"os"
+	//"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+var (
+	maxIter                            = 700
+	rMin                               = -1.
+	rMax                               = 1.
+	iMin                               = -1.
+	iMax                               = 0.
+	imgWidth                           = 640
+	imgHeight                          = 480
+	grtnsCount                         = 1
+	outputFile                         = "zad18.png"
+	funcMap    map[string]func(string) = map[string]func(string){
+		"-t":      setTaskCount,
+		"-task":   setTaskCount,
+		"-o":      setOutput,
+		"-output": setOutput,
+		"-r":      setRect,
+		"-rect":   setRect,
+		"-s":      setSize,
+		"-size":   setSize,
+	}
+)
+
+func mandelbrot(a complex128) color.Color {
+	i := 0
+	for z := a; cmplx.Abs(z) < 90 && i < maxIter; i++ {
+		z = cmplx.Exp(cmplx.Cos(a*z))
+	}
+	
+	k := i / maxIter;
+	
+	return color.RGBA{ uint8(255 * k), uint8(80 * (1 - k) + 255 * k), uint8(140 * (1 - k) + 255 * k), 255}
+}
+
+func mandelbrotSet(img *image.RGBA, startX, startY, width, height int) {
+	for x := startX; x < startX+width; x++ {
+		for y := startY; y < startY+height; y++ {
+			pixelColor := mandelbrot(complex(
+				(rMax-rMin)*float64(x)/float64(imgWidth-1)+rMin,
+				(iMax-iMin)*float64(y)/float64(imgHeight-1)+iMin)).(color.RGBA)
+			img.Set(x, y, pixelColor)
+		}
+	}
+
+}
+
+func setRect(rectStr string) {
+	dims := strings.Split(rectStr, ":")
+
+	var realMin, realMax, imagMin, imagMax float64
+	var err error
+	if realMin, err = strconv.ParseFloat(dims[0], 64); err != nil {
+		fmt.Println("Couldn't set rect. Error: ", err.Error())
+		return
+	}
+
+	if realMax, err = strconv.ParseFloat(dims[1], 64); err != nil {
+		fmt.Println("Couldn't set rect. Error: ", err.Error())
+		return
+	}
+
+	if imagMin, err = strconv.ParseFloat(dims[2], 64); err != nil {
+		fmt.Println("Couldn't set rect. Error: ", err.Error())
+		return
+	}
+
+	if imagMax, err = strconv.ParseFloat(dims[3], 64); err != nil {
+		fmt.Println("Couldn't set rect. Error: ", err.Error())
+		return
+	}
+
+	rMin, rMax, iMin, iMax = realMin, realMax, imagMin, imagMax
+}
+
+func setSize(size string) {
+	dims := strings.Split(size, "x")
+	var width, height int64
+	var err error
+
+	if width, err = strconv.ParseInt(dims[0], 10, 64); err != nil {
+		fmt.Println("Couldn't set size. Error: ", err.Error())
+		return
+	}
+
+	if height, err = strconv.ParseInt(dims[1], 10, 64); err != nil {
+		fmt.Println("Couldn't set size. Error: ", err.Error())
+		return
+	}
+
+	imgWidth, imgHeight = int(width), int(height)
+}
+
+func setTaskCount(taskNum string) {
+	taskCount, err := strconv.ParseInt(taskNum, 10, 64)
+	if err != nil {
+		fmt.Println("Couldn't set task count. Error: ", err.Error())
+		return
+	}
+
+	grtnsCount = int(taskCount)
+}
+
+func setOutput(output string) {
+	outputFile = output
+}
+
+func main() {
+
+	args := os.Args[1:]
+
+	for i := 0; i < len(args); i += 2 {
+		funcMap[args[i]](args[i+1])
+	}
+
+	bounds := image.Rect(0, 0, imgWidth, imgHeight)
+	img := image.NewRGBA(bounds)
+	currentTime := time.Now()
+	
+	fmt.Printf("Threads used in current run: %d\n", grtnsCount)
+	
+	if grtnsCount == 1 {
+		mandelbrotSet(img, 0, 0, imgWidth, imgHeight)
+	} else {
+		var wg sync.WaitGroup
+
+		blockWidth := imgWidth / grtnsCount
+		blockHeight := imgHeight / grtnsCount
+
+		var columnNum int = grtnsCount
+		var rowNum int = grtnsCount
+
+		if imgWidth%grtnsCount != 0 {
+			columnNum = grtnsCount + 1
+		}
+
+		if imgHeight%grtnsCount != 0 {
+			rowNum = grtnsCount + 1
+		}
+
+		var blockChan [][]int = make([][]int, columnNum*rowNum)
+
+		for i := 0; i < grtnsCount; i++ {
+			for j := 0; j < grtnsCount; j++ {
+				blockChan[i*grtnsCount+j] = []int{i * blockWidth, j * blockHeight, blockWidth, blockHeight}
+			}
+		}
+
+		if rowNum > grtnsCount {
+			for i := 0; i < columnNum; i++ {
+				blockChan[grtnsCount*grtnsCount+i] = []int{i * blockWidth, grtnsCount * blockHeight, blockWidth, imgHeight - blockHeight*grtnsCount}
+			}
+		}
+
+		if columnNum > grtnsCount {
+			for i := 0; i < grtnsCount; i++ {
+				blockChan[grtnsCount*grtnsCount+columnNum+i] = []int{grtnsCount * blockWidth, i * blockHeight, imgWidth - grtnsCount*blockWidth, blockHeight}
+			}
+		}
+
+		var blockCount int
+
+		// fmt.Println("Block count ", rowNum*columnNum)
+
+		for i := 0; i < grtnsCount; i++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+				//runtime.Gosched()
+				grtnTime := time.Now()
+				fmt.Printf("Thread %d started\n", id)
+				for blockCount < columnNum*rowNum {
+					block := blockChan[blockCount]
+					blockCount++
+					mandelbrotSet(img, block[0], block[1], block[2], block[3])
+				}
+				fmt.Printf("Thread %d stopped\n", id)
+				fmt.Printf("Thread %d execution time %fs\n", id, time.Since(grtnTime).Seconds()	 * 1000)
+				
+			}(i)
+		}
+
+		// fmt.Println("Goroutines started")
+
+		wg.Wait()
+
+	}
+
+	renderingTime := time.Since(currentTime)
+
+	fmt.Printf("Total execution time for current run  %fms\n", float64(renderingTime.Seconds()) * 1000)
+
+	f, err := os.Create(outputFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = png.Encode(f, img); err != nil {
+		fmt.Println(err)
+	}
+	if err = f.Close(); err != nil {
+		fmt.Println(err)
+	}
+}
