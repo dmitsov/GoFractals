@@ -136,7 +136,7 @@ func main() {
 	
 	fmt.Printf("Threads used in current run: %d\n", grtnsCount)
 
-	granularity := grtnsCount*2 
+	granularity := grtnsCount*4
 	
 	if grtnsCount == 1 {
 		mandelbrotSet(img, 0, 0, imgWidth, imgHeight)
@@ -185,7 +185,7 @@ func main() {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				//runtime.Gosched()
+				runtime.Gosched()
 				grtnTime := time.Now()
 				fmt.Printf("Thread %d started\n", id)
 				for blockCount < columnNum*rowNum {
