@@ -133,43 +133,45 @@ func main() {
 	currentTime := time.Now()
 	
 	fmt.Printf("Threads used in current run: %d\n", grtnsCount)
+
+	granularity := grtnsCount*2 
 	
 	if grtnsCount == 1 {
 		mandelbrotSet(img, 0, 0, imgWidth, imgHeight)
 	} else {
 		var wg sync.WaitGroup
 
-		blockWidth := imgWidth / grtnsCount
-		blockHeight := imgHeight / grtnsCount
+		blockWidth := imgWidth / granularity
+		blockHeight := imgHeight / granularity
 
-		var columnNum int = grtnsCount
-		var rowNum int = grtnsCount
+		var columnNum int = granularity
+		var rowNum int = granularity
 
-		if imgWidth%grtnsCount != 0 {
-			columnNum = grtnsCount + 1
+		if imgWidth%granularity != 0 {
+			columnNum = granularity + 1
 		}
 
-		if imgHeight%grtnsCount != 0 {
-			rowNum = grtnsCount + 1
+		if imgHeight%granularity != 0 {
+			rowNum = granularity + 1
 		}
 
 		var blockChan [][]int = make([][]int, columnNum*rowNum)
 
-		for i := 0; i < grtnsCount; i++ {
-			for j := 0; j < grtnsCount; j++ {
-				blockChan[i*grtnsCount+j] = []int{i * blockWidth, j * blockHeight, blockWidth, blockHeight}
+		for i := 0; i < granularity; i++ {
+			for j := 0; j < granularity; j++ {
+				blockChan[i*granularity+j] = []int{i * blockWidth, j * blockHeight, blockWidth, blockHeight}
 			}
 		}
 
-		if rowNum > grtnsCount {
+		if rowNum > granularity {
 			for i := 0; i < columnNum; i++ {
-				blockChan[grtnsCount*grtnsCount+i] = []int{i * blockWidth, grtnsCount * blockHeight, blockWidth, imgHeight - blockHeight*grtnsCount}
+				blockChan[granularity*granularity+i] = []int{i * blockWidth, granularity * blockHeight, blockWidth, imgHeight - blockHeight*granularity}
 			}
 		}
 
-		if columnNum > grtnsCount {
-			for i := 0; i < grtnsCount; i++ {
-				blockChan[grtnsCount*grtnsCount+columnNum+i] = []int{grtnsCount * blockWidth, i * blockHeight, imgWidth - grtnsCount*blockWidth, blockHeight}
+		if columnNum > granularity {
+			for i := 0; i < granularity; i++ {
+				blockChan[granularity*granularity+columnNum+i] = []int{granularity * blockWidth, i * blockHeight, imgWidth - granularity*blockWidth, blockHeight}
 			}
 		}
 
