@@ -183,20 +183,20 @@ func main() {
 
 		for i := 0; i < grtnsCount; i++ {
 			wg.Add(1)
-			go func(id int) {
+			go func(id int, blocks [][]int) {
 				defer wg.Done()
 				runtime.Gosched()
 				grtnTime := time.Now()
 				fmt.Printf("Thread %d started\n", id)
 				for blockCount < columnNum*rowNum {
-					block := blockChan[blockCount]
+					block := blocks[blockCount]
 					blockCount++
 					mandelbrotSet(img, block[0], block[1], block[2], block[3])
 				}
 				fmt.Printf("Thread %d stopped\n", id)
 				fmt.Printf("Thread %d execution time %fs\n", id, time.Since(grtnTime).Seconds()	 * 1000)
 				
-			}(i)
+			}(i, blockChan)
 		}
 
 		// fmt.Println("Goroutines started")
