@@ -8,7 +8,7 @@ import (
 	"image/png"
 	"math/cmplx"
 	"os"
-	//"runtime"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -123,7 +123,7 @@ func setOutput(output string) {
 func main() {
 
 	args := os.Args[1:]
-
+	runtime.GOMAXPROCS = 32
 	for i := 0; i < len(args); i += 2 {
 		funcMap[args[i]](args[i+1])
 	}
