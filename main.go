@@ -143,7 +143,7 @@ func main() {
 	if !isQuiet {
 		fmt.Printf("Threads used in current run: %d\n", grtnsCount)
 	}
-	granularity := grtnsCount
+	granularity := 2 * grtnsCount
 	
 	if grtnsCount == 1 {
 		mandelbrotSet(img, 0, 0, imgWidth, imgHeight)
