@@ -190,7 +190,7 @@ func main() {
 
 		// fmt.Println("Block count ", rowNum*columnNum)
 
-		for i := 0; i < grtnsCount - 1; i++ {
+		for i := 0; i < 2*grtnsCount - 1; i++ {
 			wg.Add(1)
 			go func(id int, blocks [][]int) {
 				defer wg.Done()
