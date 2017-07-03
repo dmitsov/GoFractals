@@ -215,22 +215,22 @@ func main() {
 					var wgInternal sync.WaitGroup
 
 					wgInternal.Add(1)
-					go func(x, y, w, h int) {
+					go func(im *image.RGBA, x, y, w, h int) {
 						defer wgInternal.Done()
-						mandelbrotSet(img, x, y, w, h)
-					}(block[0]+col1Width, block[1], col2Width, row1Height)
+						mandelbrotSet(im, x, y, w, h)
+					}(img, block[0]+col1Width, block[1], col2Width, row1Height)
 
 					wgInternal.Add(1)
-					go func(x, y, w, h int) {
+					go func(im *image.RGBA, x, y, w, h int) {
 						defer wgInternal.Done()
-						mandelbrotSet(img, x, y, w, h)
-					}(block[0], block[1]+row1Height, col1Width, row2Height)
+						mandelbrotSet(im, x, y, w, h)
+					}(img, block[0], block[1]+row1Height, col1Width, row2Height)
 
 					wgInternal.Add(1)
-					go func(x, y, w, h int) {
+					go func(im *image.RGBA, x, y, w, h int) {
 						defer wgInternal.Done()
-						mandelbrotSet(img, x, y, w, h)
-					}(block[0]+col1Width, block[1]+row1Height, col2Width, row2Height)
+						mandelbrotSet(im, x, y, w, h)
+					}(img, block[0]+col1Width, block[1]+row1Height, col2Width, row2Height)
 
 					mandelbrotSet(img, block[0], block[1], col1Width, row1Height)
 					wgInternal.Wait()
@@ -259,22 +259,22 @@ func main() {
 			var wgInternal sync.WaitGroup
 
 			wgInternal.Add(1)
-			go func(x, y, w, h int) {
+			go func(im *image.RGBA, x, y, w, h int) {
 				defer wgInternal.Done()
-				mandelbrotSet(img, x, y, w, h)
-			}(block[0]+col1Width, block[1], col2Width, row1Height)
+				mandelbrotSet(im, x, y, w, h)
+			}(img, block[0]+col1Width, block[1], col2Width, row1Height)
 
 			wgInternal.Add(1)
-			go func(x, y, w, h int) {
+			go func(im *image.RGBA, x, y, w, h int) {
 				defer wgInternal.Done()
-				mandelbrotSet(img, x, y, w, h)
-			}(block[0], block[1]+row1Height, col1Width, row2Height)
+				mandelbrotSet(im, x, y, w, h)
+			}(img, block[0], block[1]+row1Height, col1Width, row2Height)
 
 			wgInternal.Add(1)
-			go func(x, y, w, h int) {
+			go func(im *image.RGBA, x, y, w, h int) {
 				defer wgInternal.Done()
-				mandelbrotSet(img, x, y, w, h)
-			}(block[0]+col1Width, block[1]+row1Height, col2Width, row2Height)
+				mandelbrotSet(im, x, y, w, h)
+			}(img, block[0]+col1Width, block[1]+row1Height, col2Width, row2Height)
 
 			mandelbrotSet(img, block[0], block[1], col1Width, row1Height)
 			wgInternal.Wait()
